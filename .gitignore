@@ -1,0 +1,7 @@
+.nodester.appconfig
+.idea
+.monitor
+node_modules
+.db
+.svn
+assets/xcode
