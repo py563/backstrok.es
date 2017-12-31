@@ -1,0 +1,30 @@
+{
+  "env": {
+    "node": true,
+    "jest/globals": true
+  },
+  "extends": [
+    "airbnb",
+    "prettier",
+    "prettier/flowtype",
+    "plugin:flowtype/recommended",
+    "plugin:jest/recommended"
+  ],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "sourceType": "module"
+  },
+  "plugins": ["prettier", "flowtype", "babel", "jest"],
+  "rules": {
+    "strict": 0,
+    "prettier/prettier": ["error", "fb"],
+    "node/no-unsupported-features": 0,
+    "react/jsx-closing-bracket-location": [
+      1,
+      {
+        "nonEmpty": false,
+        "selfClosing": "tag-aligned"
+      }
+    ]
+  }
+}

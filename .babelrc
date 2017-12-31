@@ -1,0 +1,20 @@
+{
+  "comments": false,
+  "plugins": [
+    "transform-object-rest-spread",
+    "transform-merge-sibling-variables",
+    "transform-class-properties"
+  ],
+  "presets": [
+    [
+      "env",
+      {
+        "targets": {
+          "node": "4"
+        }
+      }
+    ],
+    "react",
+    "flow"
+  ]
+}

@@ -1,21 +1,21 @@
 'use strict';
 
-var Client = require('react-engine/lib/client');
+const Client = require('react-engine/lib/client');
 
 // Include all view files. Browerify doesn't do
 // this automatically as it can only operate on
 // static require statements.
-require('./../../views/Home.jsx', {glob: true});
+require('./../../views/Home', {glob: true});
 
 // boot options
-var options = {
+const options = {
   // supply a function that can be called
   // to resolve the file that was rendered.
-  viewResolver: function(viewName) {
-    return require('./../../views/' + viewName);
-  }
+  viewResolver(viewName) {
+    return require(`./../../views/${viewName}`);
+  },
 };
 
-document.addEventListener('DOMContentLoaded', function onLoad() {
+document.addEventListener('DOMContentLoaded', () => {
   Client.boot(options);
 });
