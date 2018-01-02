@@ -1,7 +1,8 @@
 /* @flow */
 const sys = require('util');
-const _ = require('underscore');
+const path = require('path');
 const logger = require('winston');
+const _ = require('underscore');
 const backstrokeLib = require('./backstroke');
 const foursquareLib = require('node-foursquare');
 
@@ -54,7 +55,7 @@ module.exports.addRoutes = (app, config) => {
       }
       years.push(v);
     }
-    return _.toArray(years);
+    return years;
   }
 
   function restrict(req, res, next) {
@@ -74,7 +75,7 @@ module.exports.addRoutes = (app, config) => {
     if (req.session.foursquare) {
       data.session = req.session;
     }
-    res.render('Home', data);
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 
   app.get('/login', (req, res) => {
@@ -228,7 +229,7 @@ module.exports.addRoutes = (app, config) => {
         data: null,
         form,
       };
-      res.render('Trips', props);
+      res.sendFile(path.join(__dirname, 'build', 'trips.html'));
     }
   });
 
