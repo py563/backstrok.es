@@ -1,0 +1,47 @@
+.hidden {
+  position: absolute;
+  visibility: hidden;
+}
+
+.section {
+  padding: 0.25em;
+}
+
+.sectionHeader {
+  font-size: 1.3em;
+  border-bottom: 1px dotted #9ab5ff;
+  padding: 0 0.2em 0.2em;
+  margin: 0 0 0.5em 0;
+  color: #344881;
+}
+
+.sectionHeader a {
+  border: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.buttonLabel {
+  display: block;
+  height: 25px;
+  line-height: 25px;
+  white-space: nowrap;
+  padding-right: 30px;
+  text-decoration: none;
+  color: #9ab5ff;
+  background: #e8edfb;
+  text-align: center;
+  height: 30px;
+  line-height: 30px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin: 20px 0 0 0;
+  padding: 0;
+  width: 426px;
+}
+
+.buttonLabel:hover {
+  background: #9ab5ff;
+  color: #344881;
+}

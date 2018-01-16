@@ -1,0 +1,16 @@
+.nav {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 0.85em;
+}
+
+.nav p {
+  float: left;
+  padding: 5px;
+}
+
+.nav a {
+  color: #6782cd;
+  text-decoration: none;
+}

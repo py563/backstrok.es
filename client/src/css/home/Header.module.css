@@ -1,0 +1,17 @@
+.header {
+  margin: 0 0 10px 0;
+}
+
+.heading {
+  color: #344881;
+  font-size: 3.5em;
+  text-shadow: 2px 1px 2px #6782cd;
+  margin: 0 0 0 110px;
+}
+
+.tagline {
+  color: #6782cd;
+  font-size: 1.2em;
+  padding: 0 0.25em 0 0.25em;
+  margin: 0 0 0 110px;
+}

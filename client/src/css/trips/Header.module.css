@@ -1,0 +1,68 @@
+.header {
+  color: #344881;
+  font-size: 3.5em;
+  text-shadow: 2px 1px 2px #6782cd;
+  margin: 0 0 100px 0;
+  padding: 0 0 0 90px;
+}
+
+.header a {
+  text-decoration: none;
+  color: #344881;
+}
+
+.subHeader {
+  height: 57px;
+  position: absolute;
+  width: 528px;
+  margin-left: -40px;
+  margin-top: -75px;
+  z-index: 100;
+  text-align: center;
+}
+
+.tagline {
+  composes: hidden from './../core.module.css';
+}
+
+.subHeader span {
+  background: #6782cd;
+  border-radius: 2px;
+  box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.35);
+  display: block;
+  font-size: 30px;
+  color: #fff;
+  padding: 10px 25px;
+  text-shadow: 2px 2px 1px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 100;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 478px;
+}
+
+.subHeader:before,
+.subHeader:after {
+  content: ' ';
+  display: block;
+  border-style: solid;
+  border-width: 14px;
+  border-color: transparent;
+  height: 0;
+  width: 0;
+  position: absolute;
+  z-index: -1;
+}
+
+.subHeader:before {
+  border-right-color: #7d90a3;
+  bottom: -14px;
+  left: -14px;
+}
+
+.subHeader:after {
+  border-left-color: #7d90a3;
+  margin-top: -15px;
+  bottom: -14px;
+  right: -14px;
+}

@@ -1,0 +1,121 @@
+.section {
+  composes: section from './../core.module.css';
+}
+
+.tripForm {
+  margin: 15px 0 0 0;
+}
+
+.field {
+  margin: 6px 0;
+}
+
+.field input,
+.field select {
+  border: 1px solid #9ab5ff;
+  font-size: 20px;
+  color: #344881;
+  border-radius: 4px;
+}
+
+.field input {
+  width: 194px;
+  padding: 6px;
+  background: #e8edfb;
+  box-shadow: inset -1px -1px 6px rgba(153, 153, 153, 0.4);
+}
+
+.fieldCaption {
+  display: block;
+  font-size: 22px;
+  width: 219px;
+  color: #344881;
+  padding: 7px 13px 7px 0;
+  text-align: right;
+  position: relative;
+  float: left;
+}
+
+.submit,
+.options {
+  display: inline-block;
+  margin: 15px 0 0 0;
+}
+
+.submit {
+  margin-left: 233px;
+}
+
+.options + .submit {
+  margin-left: 28px;
+}
+
+.submit input,
+.options a {
+  cursor: pointer;
+  font-size: 1.3em;
+  padding: 10px 0;
+  display: block;
+  min-width: 140px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.25);
+  text-decoration: none;
+  color: #fff;
+  border: solid 1px #6782cd;
+  text-align: center;
+  width: 205px;
+}
+
+.options a {
+  background: #6782cd;
+  background: linear-gradient(to bottom, #9ab5ff, #6782cd);
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#9AB5FF',
+      endColorstr='#6782CD'
+    );
+}
+
+.submit input {
+  background: #64991e;
+  background: linear-gradient(to bottom, #7db72f, #4e7d0e);
+  border: solid 1px #538312;
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#7db72f',
+      endColorstr='#4e7d0e'
+    );
+}
+
+.options a:hover {
+  background: #538018;
+  background: linear-gradient(to bottom, #7291e6, #405dad);
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#7291e6',
+      endColorstr='#405dad'
+    );
+}
+
+.submit input:hover {
+  background: #538018;
+  background: linear-gradient(to bottom, #6b9d28, #436b0c);
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#6b9d28',
+      endColorstr='#436b0c'
+    );
+}
+
+.options a:active {
+  background: linear-gradient(to bottom, #6782cd, #9ab5ff);
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#6782CD',
+      endColorstr='#9AB5FF'
+    );
+}
+
+.submit input:active {
+  background: linear-gradient(to bottom, #4e7d0e, #7db72f);
+  filter: progid:DXImageTransform.Microsoft.gradient(
+      startColorstr='#4e7d0e',
+      endColorstr='#7db72f'
+    );
+}

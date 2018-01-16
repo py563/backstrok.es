@@ -1,0 +1,26 @@
+.about {
+  composes: section from './../core.module.css';
+  width: 44%;
+  padding: 2%;
+  border: 1px solid #9ab5ff;
+  min-height: 150px;
+  background: #e8edfb;
+  -webkit-box-shadow: inset -1px -1px 6px #999;
+  -moz-box-shadow: inset -1px -1px 6px #999;
+  box-shadow: inset -1px -1px 6px #999;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  float: right;
+  margin: 0 0 0 1%;
+  zoom: 1;
+}
+
+.aboutHeader {
+  composes: sectionHeader from './../core.module.css';
+}
+
+.about p {
+  padding: 0.5em;
+  color: #444;
+}

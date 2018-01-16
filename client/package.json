@@ -1,0 +1,23 @@
+{
+  "name": "backstrok.es-client",
+  "description": "Client implementation for backstrok.es",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Clint Andrew Hall <clint@clintandrewhall.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clintandrewhall/backstrok.es/client"
+  },
+  "dependencies": {
+    "custom-react-scripts": "0.2.1",
+    "moment": "^2.20.1",
+    "react": "^16.2.0",
+    "react-dom": "^16.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
