@@ -1,147 +1,118 @@
+/* @flow */
+import util from 'util';
+import logger from 'winston';
+import maps from '@google/maps';
 
-var sys = require("util"),
-  http = require("http"),
-  zipCache = [];
+import type { GeocodeConfiguration } from './config';
+
+export type Location = {
+  lat: number,
+  lng: number,
+};
+
+export type Distance = {
+  start: Location,
+  end: Location,
+  miles: number,
+  km: number,
+};
+
+const postalCodeCache = {};
 
 /* Converts numeric degrees to radians */
-if(!Number.prototype.toRad) {
-  Number.prototype.toRad = function() {
-    return this * Math.PI / 180;
-  }
+function toRad(number: number): number {
+  return number * Math.PI / 180;
 }
 
-var LatLng = function(config) {
-  var logger = require('winston');
+var LatLng = function(config: GeocodeConfiguration) {
+  const { appId } = config;
 
-  function performRequest(host, url, handler, options) {
-    var connection = http.createClient(80, host);
-    options = {
-      "host" : host,
-      "User-Agent": "NodeJS HTTP Client"
-    };
-    var request = connection.request('GET', url, options);
+  const Maps = maps.createClient({
+    key: appId,
+    Promise: Promise,
+  });
 
-    request.addListener("response", function(response) {
-      var responseBody = "";
-      response.setEncoding("utf8");
-      response.addListener("data", function(chunk) {
-        responseBody += chunk
-      });
-      response.addListener("end", function() {
-        handler(null, responseBody);
-      });
-      response.addListener("error", function(error) {
-        handler(error);
-      });
-    });
-    request.on("error", function(error) {
-      logger.error("Error calling remote host: " + error.message);
-      handler(error);
-    });
-    request.end();
-  }
+  async function genLocationByPostalCode(
+    postalCode: string,
+  ): Promise<?Location> {
+    const cacheEntry = postalCodeCache[postalCode];
 
-  function getLocationByZipCode(zip, callback) {
-    if(zipCache[zip]) {
-      logger.info("RETRIEVED: " + zip + " from cache: " + sys.inspect(zipCache[zip]));
-      callback(null, zipCache[zip]);
+    if (cacheEntry) {
+      logger.info(
+        'RETRIEVED: ' + postalCode + ' from cache: ' + util.inspect(cacheEntry),
+      );
+      return cacheEntry;
     }
-    else {
-      logger.info("RETRIEVING: Location data for " + zip + " from service.");
-      /*var url = "http://where.yahooapis.com/geocode?country=USA&flags=j&appId=" + config.yahoo.appId + "&postal=" + zip,
-          host = "where.yahooapis.com";*/
-      var url = "http://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20geo.placefinder%20where%20postal%3D%22" + encodeURI(zip) + "%22&format=json",
-          host = "query.yahooapis.com";
-      performRequest(host, url, function(error, result) {
-        if(error) {
-          callback(error);
-        }
-        else {
-          try {
-            result = JSON.parse(result).query.results.Result;
-          }
-          catch(e) {
-            callback({
-                  "name" : "RuntimeError",
-                  "description" : "There was an error parsing the response from Yahoo Geocoding based on the zip code" + zip,
-                  "details" : result,
-                  "error" : e
-                });
-            return;
-          }
 
-          if(result.Error && results.Error > 0) {
-            callback({
-                  "name" : "RuntimeError",
-                  "description" : "Yahoo returned an error: " + result.Error + " - " + result.ErrorMessage,
-                  "details" : result
-                });
-            return;
-          }
+    logger.info(
+      'RETRIEVING: Location data for ' + postalCode + ' from service.',
+    );
 
-          if(result.Found && result.Found <= 0) {
-            callback({
-                  "name" : "RuntimeError",
-                  "description" : "No results were returned with zip code: " + zip,
-                  "details" : result
-                });
-            return;
-          }
-            /*var loc = /<location>((?:,|\w|\s?)+)<\/location>/g.exec(result),
-              lat = /<latitude>(-?\d+\.\d+)<\/latitude>/g.exec(result),
-              lng = /<longitude>(-?\d+\.\d+)<\/longitude>/g.exec(result),*/
-          var item = result,
-              lat = item.latitude,
-              lng = item.longitude,
-              loc = item.city + ", " + item.statecode,
-              entry = {
-                "zip" : zip,
-                "loc" : (loc && loc.length > 0) ? loc : "",
-                "lat" : (lat && lat.length > 0) ? (lat * 1) : null,
-                "lng" : (lng && lng.length > 0) ? (lng * 1) : null
-              };
-          if(!entry.lat || !entry.lng) {
-            logger.error("Zip code " + zip + " did not return valid results.");
-            logger.debug("Created: " + sys.inspect(entry) + " From: " + sys.inspect(result));
-            callback({
-              "name" : "RuntimeError",
-              "description" : "The specified zip code " + zip + " either did not resolve to a valid location, or there was " +
-                  "an error in the Yahoo service.",
-              "details" : result
-            });
-          }
-          else {
-            logger.info("RETRIEVED: " + entry.loc + " for ZIP code " + zip);
-            zipCache[zip] = entry;
-            callback(null, entry);
-          }
-        }
-      }, null);
+    try {
+      const result = await Maps.geocode({ address: postalCode }).asPromise();
+      const { status } = result;
+
+      if (status !== 200) {
+        logger.error('LATLNG: service returned non-200 status: ' + status);
+        return null;
+      }
+
+      const { json } = result;
+      const { results } = json || {};
+
+      if (!results || results.length === 0) {
+        logger.info(
+          'LATLNG: postalCode ' + postalCode + ' returned no results.',
+        );
+        return null;
+      }
+
+      // let's just go with the first result, for now.
+      const { geometry } = results[0];
+      const { location } = geometry;
+
+      logger.info(
+        'RETRIEVED: ' + postalCode + ' from service: ' + util.inspect(location),
+      );
+
+      postalCodeCache[postalCode] = location;
+
+      return location;
+    } catch (e) {
+      logger.error('LATLNG: ' + e.message);
+      return null;
     }
   }
 
-  function getDistance(start, end) {
+  function getDistance(start: Location, end: Location): Distance {
     /* Props to MoveableType Scripts: http://www.movable-type.co.uk/scripts/latlong.html */
-    var radius = 6371,
-      dLat = (end.lat - start.lat).toRad(),
-      dLon = (end.lng - start.lng).toRad(),
-      a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(start.lat.toRad()) * Math.cos(end.lat.toRad()) *
-            Math.sin(dLon/2) * Math.sin(dLon/2),
-      km = radius * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))),
-      m = km / 1.607;
+    const radius = 6371;
+    const dLat = toRad(end.lat - start.lat);
+    const dLon = toRad(end.lng - start.lng);
+
+    const angle =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(start.lat)) *
+        Math.cos(toRad(end.lat)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+
+    const km =
+      radius * (2 * Math.atan2(Math.sqrt(angle), Math.sqrt(1 - angle)));
+    const miles = km / 1.607;
+
     return {
-      "start" : start,
-      "end" : end,
-      "miles" : m,
-      "km" : km
-    }
+      start,
+      end,
+      miles,
+      km,
+    };
   }
 
   return {
-    "getDistance" : getDistance,
-    "getLocationByZipCode" : getLocationByZipCode
-  }
+    getDistance,
+    genLocationByPostalCode,
+  };
 };
 
 exports = module.exports = LatLng;
