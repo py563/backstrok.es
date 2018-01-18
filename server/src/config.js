@@ -23,6 +23,10 @@ export type Configuration = {
       clientSecret: string,
       redirectUrl: string,
     },
+    foursquare: {
+      mode: 'foursquare' | 'swarm',
+      version: string,
+    },
     startYear: number,
     winston: {
       loggers: {
@@ -49,15 +53,19 @@ dotenv.config();
 
 const config: Configuration = {
   backstrokes: {
-    concurrentCalls: 3,
+    concurrentCalls: parseInt(process.env.LIMIT_CALLS, 10) || 3,
     distanceUnit: 'miles',
-    limit: 250,
-    passLimit: parseInt(process.env.PASS_LIMIT, 10) || 10,
+    limit: parseInt(process.env.LIMIT_RESULTS, 10) || 250,
+    passLimit: parseInt(process.env.LIMIT_PASSES, 10) || 10,
     radiusHome: 50,
     radiusCity: 20,
     tripMinimum: 2,
   },
   foursquare: {
+    foursquare: {
+      mode: 'swarm',
+      version: '20180118',
+    },
     secrets: {
       clientId: process.env.FSQ_CLIENT_ID || '',
       clientSecret: process.env.FSQ_CLIENT_SECRET || '',
@@ -68,7 +76,7 @@ const config: Configuration = {
       loggers: {
         default: {
           console: {
-            level: 'debug',
+            level: 'enter',
           },
         },
       },

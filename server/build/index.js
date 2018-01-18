@@ -1,31 +1,46 @@
-/* @flow */
-import 'babel-core/register';
-import 'babel-polyfill';
-import express from 'express';
-import 'express-async-errors';
-import winston from 'winston';
+'use strict';
 
-import config from './config';
-import { addRoutes } from './routes';
+require('babel-core/register');
 
-const app = express();
-const { server } = config;
-const { port, session } = server;
-const { maxAge, secret } = session;
+require('babel-polyfill');
 
-app.use(
-  require('express-session')({
-    maxAge,
-    resave: true,
-    saveUninitialized: true,
-    secret,
-  }),
-);
+var _express = require('express');
 
-app.use(express.static(`${__dirname}/public`));
-addRoutes(app, config);
+var _express2 = _interopRequireDefault(_express);
+
+require('express-async-errors');
+
+var _winston = require('winston');
+
+var _winston2 = _interopRequireDefault(_winston);
+
+var _config = require('./config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _routes = require('./routes');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var app = (0, _express2.default)();
+var server = _config2.default.server;
+var port = server.port,
+    session = server.session;
+var maxAge = session.maxAge,
+    secret = session.secret;
+
+
+app.use(require('express-session')({
+  maxAge: maxAge,
+  resave: true,
+  saveUninitialized: true,
+  secret: secret
+}));
+
+app.use(_express2.default.static(__dirname + '/public'));
+(0, _routes.addRoutes)(app, _config2.default);
 app.listen(port);
-winston.info('Server started on port ' + port);
+_winston2.default.info('Server started on port ' + port);
 
 // import latlng from './latlng';
 // const { geocode } = config;

@@ -49,15 +49,15 @@ var LatLng = function(config: GeocodeConfiguration) {
     );
 
     try {
-      const result = await Maps.geocode({ address: postalCode }).asPromise();
-      const { status } = result;
+      const geocode = await Maps.geocode({ address: postalCode }).asPromise();
+      const { status } = geocode;
 
       if (status !== 200) {
         logger.error('LATLNG: service returned non-200 status: ' + status);
         return null;
       }
 
-      const { json } = result;
+      const { json } = geocode;
       const { results } = json || {};
 
       if (!results || results.length === 0) {
@@ -68,16 +68,23 @@ var LatLng = function(config: GeocodeConfiguration) {
       }
 
       // let's just go with the first result, for now.
-      const { geometry } = results[0];
+      const { formatted_address, geometry } = results[0];
       const { location } = geometry;
+      const { lat, lng } = location;
+
+      const result = {
+        display: formatted_address,
+        lat,
+        lng,
+      };
 
       logger.info(
-        'RETRIEVED: ' + postalCode + ' from service: ' + util.inspect(location),
+        'RETRIEVED: ' + postalCode + ' from service: ' + util.inspect(result),
       );
 
-      postalCodeCache[postalCode] = location;
+      postalCodeCache[postalCode] = result;
 
-      return location;
+      return result;
     } catch (e) {
       logger.error('LATLNG: ' + e.message);
       return null;

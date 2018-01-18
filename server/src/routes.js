@@ -1,7 +1,8 @@
 /* @flow */
 import express from 'express';
-import logger from 'winston';
+import winston from 'winston';
 import foursquare from 'node-foursquare';
+import moment from 'moment';
 
 import type {
   $Application,
@@ -20,7 +21,7 @@ type SessionEnabledRequest = $Request & {
     destroy: Function,
     foursquare?: {
       accessToken: string,
-      user: {
+      user?: {
         id: string,
         firstName: string,
         lastName: string,
@@ -34,75 +35,16 @@ type SessionEnabledRequest = $Request & {
   },
 };
 
-// const USER = {
-//   id: '62243',
-//   firstName: 'Clint',
-//   lastName: 'Hall',
-//   gender: 'male',
-//   relationship: 'self',
-//   canonicalUrl: 'https://foursquare.com/clintandrewhall',
-//   photo: {
-//     prefix: 'https://igx.4sqi.net/img/user/',
-//     suffix: '/62243_1257023213416.jpg',
-//   },
-//   friends: { count: 178, groups: [] },
-//   tips: { count: 26 },
-//   homeCity: 'Brooklyn, NY',
-//   bio:
-//     'User Interface Engineer at Facebook. My tweets, particularly the crazy ones, are my own.',
-//   contact: {
-//     phone: '8163080261',
-//     verifiedPhone: 'false',
-//     email: 'clintandrewhall@gmail.com',
-//     twitter: 'clintandrewhall',
-//     facebook: '500017755',
-//   },
-//   superuser: 2,
-//   photos: { count: 516, items: [] },
-//   checkinPings: 'off',
-//   pings: false,
-//   type: 'user',
-//   mayorships: { count: 0, items: [] },
-//   checkins: { count: 3349, items: [] },
-//   requests: { count: 0 },
-//   lists: { count: 16, groups: [] },
-//   blockedStatus: 'none',
-//   createdAt: 1255634222,
-//   lenses: [],
-//   referralId: 'u-62243',
-// };
-// const ACCESS_TOKEN = 'IBLDFRIVAINZHOF5OLKXSOS12VB4HMKNOGNXKZEE41CHCCUB';
+const logger = new winston.Logger({
+  transports: [new winston.transports.Console({ level: 'debug' })],
+});
 
-function restrict(
-  request: SessionEnabledRequest,
-  response: $Response,
-  next: NextFunction,
-) {
-  logger.debug(`BEFORE: ${request.url}`);
-  logger.debug('Entering: /restrict');
-  const session = { request };
-
-  if (!session) {
-    response.status(503);
-    response.send('Session unavailable.');
-    return;
-  }
-
-  if (session.foursquare) {
-    next();
-    return;
-  }
-
-  response.status(401);
-  response.send('Not Authorized');
-}
-
-function sendResponse(json: Object): string {
+function sendWindowedResponse(json: Object): string {
   return `
     <html><body><script type="text/javascript">
       window.opener.postMessage(
         ${JSON.stringify(json)},
-        window.opener.location
+        window.opener.location,
       );
     </script></body></html>
   `;
@@ -112,6 +54,50 @@ function addRoutes(app: $Application, config: Configuration) {
   const router: Router = express.Router();
   const Backstroke = backstroke(config);
   const Foursquare = foursquare(config.foursquare);
+
+  async function genUser(accessToken: string) {
+    return new Promise((resolve, reject) =>
+      Foursquare.Users.getUser('self', accessToken, function success(
+        error,
+        results,
+      ) {
+        if (error) {
+          reject(error);
+        } else {
+          console.log(results);
+          resolve(results.user);
+        }
+      }),
+    );
+  }
+
+  async function restrict(
+    request: SessionEnabledRequest,
+    response: $Response,
+    next: NextFunction,
+  ) {
+    logger.debug(`BEFORE: ${request.url}`);
+    logger.debug('Entering: /restrict');
+    let { session } = request;
+    let { foursquare } = session;
+    const accessToken = process.env.ACCESS_TOKEN;
+
+    // If we have an access token in config, we're likely testing something, so
+    // call for the current user.
+    if ((!foursquare || !foursquare.accessToken) && accessToken) {
+      const user = await genUser(accessToken);
+      request.session.foursquare = { accessToken, user };
+      session = request.session;
+    }
+
+    if (session.foursquare) {
+      next();
+      return;
+    }
+
+    response.status(401);
+    response.send('Not Authorized');
+  }
 
   router
     .route('/login')
@@ -149,35 +135,71 @@ function addRoutes(app: $Application, config: Configuration) {
           {
             code,
           },
-          (acError, accessToken) => {
-            console.log('AT', accessToken);
-            if (acError) {
-              logger.error(`Error retrieving Access Token: ${acError.message}`);
-              response.send(
-                sendResponse({ auth: false, reason: 'acError.message' }),
+          (accessTokenError: Error, accessToken: string) => {
+            if (accessTokenError) {
+              logger.error(
+                `Error retrieving Access Token: ${accessTokenError.message}`,
               );
-            } else if (accessToken) {
-              Foursquare.Users.getUser('self', accessToken, (guError, user) => {
-                if (guError) {
-                  response.send(
-                    sendResponse({ auth: false, reason: 'bad_user' }),
-                  );
-                } else {
-                  request.session.foursquare = {
-                    user: user.user,
-                    accessToken,
-                  };
-                  delete request.query.code;
-                  delete request.query.c;
-                  response.send(sendResponse({ auth: true }));
-                }
-              });
+              response.send(
+                sendWindowedResponse({
+                  auth: false,
+                  reason: accessTokenError.message,
+                }),
+              );
+              return;
+            }
+
+            if (accessToken) {
+              Foursquare.Users.getUser(
+                'self',
+                accessToken,
+                (getUserError: Error, user: Object) => {
+                  if (getUserError) {
+                    response.send(
+                      sendWindowedResponse({
+                        auth: false,
+                        reason: getUserError.message,
+                      }),
+                    );
+                  } else {
+                    request.session.foursquare = {
+                      user: user.user,
+                      accessToken,
+                    };
+                    delete request.query.code;
+                    delete request.query.c;
+                    response.send(sendWindowedResponse({ auth: true }));
+                  }
+                },
+              );
             } else {
               logger.error('No Access Token was received.');
-              response.send(sendResponse({ auth: false, reason: 'no_token' }));
+              response.send(
+                sendWindowedResponse({ auth: false, reason: 'no_token' }),
+              );
             }
           },
         );
+      },
+    );
+
+  router
+    .route('/who')
+    .get(
+      restrict,
+      (
+        request: SessionEnabledRequest,
+        response: $Response,
+        _next: NextFunction,
+      ) => {
+        logger.debug('REQUESTING: /api/who');
+        const { session } = request;
+        const { foursquare } = session;
+        const { user } = foursquare || {};
+
+        response.json({
+          foursquare: user,
+        });
       },
     );
 
@@ -196,7 +218,7 @@ function addRoutes(app: $Application, config: Configuration) {
     );
 
   router
-    .route('/trips')
+    .route('/trips/:postalCode')
     .get(
       restrict,
       async (
@@ -204,63 +226,73 @@ function addRoutes(app: $Application, config: Configuration) {
           params: ?{
             postalCode?: ?string,
           },
+          query: ?{
+            ey?: string, // end years
+            em?: string, // end month
+            sy?: string, // start year
+            sm?: string, // start month
+            hr?: string, // home radius
+            cr?: string, // city radius
+            tm?: string, // trip minimum
+          },
         },
         response: $Response,
         _: NextFunction,
       ) => {
-        logger.debug('REQUESTING: /trips');
-        const { session, params } = request;
+        logger.debug('REQUESTING: /trips/:postalCode');
+        const { session, params, query } = request;
         const { foursquare } = session;
         const { accessToken } = foursquare || {};
         const { postalCode } = params;
 
-        // request.session.checkins = request.session.checkins || {};
-
         if (!postalCode) {
           response.status(401);
-          response.send('Postal Code Invalid or not Provided');
+          response.send('Postal Code invalid or not provided');
           return;
         }
 
-        // if (form.advanced) {
-        //   const ey = parseInt(
-        //     _.select(form.advanced.endYears, selected)[0].value,
-        //     10,
-        //   );
-        //   const em = parseInt(
-        //     _.select(form.advanced.endMonths, selected)[0].value,
-        //     10,
-        //   );
-        //   const sy = parseInt(
-        //     _.select(form.advanced.startYears, selected)[0].value,
-        //     10,
-        //   );
-        //   const sm = parseInt(
-        //     _.select(form.advanced.startMonths, selected)[0].value,
-        //     10,
-        //   );
-        //   const before = new Date(ey, em + 1, 0, 0, 0, 0, 0);
-        //   const after = new Date(sy, sm, 1, 0, 0, 0, 0);
-        //
-        //   options = {
-        //     after,
-        //     before,
-        //     homeRadius: form.advanced.homeRadius,
-        //     cityRadius: form.advanced.cityRadius,
-        //     tripMinimum: form.advanced.tripMinimum,
-        //   };
-        // }
+        let options = {};
+
+        const endDate = moment().endOf('month');
+        const startDate = moment()
+          .startOf('month')
+          .subtract(1, 'year');
+
+        if (query) {
+          const { ey, em, sy, sm, hr, cr, tm } = query;
+
+          if (sm && sy) {
+            const startMonth = parseInt(sm, 10);
+            const startYear = parseInt(sy, 10);
+            startDate.month(startMonth - 1).year(startYear);
+          }
+
+          if (em && ey) {
+            const endMonth = parseInt(em, 10);
+            const endYear = parseInt(ey, 10);
+            endDate.month(endMonth - 1).year(endYear);
+          }
+
+          if (hr) {
+            options.radiusHome = parseInt(hr, 10);
+          }
+
+          if (cr) {
+            options.radiusCity = parseInt(cr, 10);
+          }
+
+          if (tm) {
+            options.tripMinimum = parseInt(tm, 10);
+          }
+        }
 
         logger.debug('Retrieving checkins to build trips.');
 
-        const before = new Date();
-        const after = new Date();
-        after.setFullYear(2015);
-
         const tripCollection = await Backstroke.genTripCollection(
           postalCode,
-          before,
-          after,
+          endDate.toDate(),
+          startDate.toDate(),
+          options,
           accessToken,
         );
 

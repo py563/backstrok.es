@@ -36,6 +36,12 @@ type FSQCheckin = {
   },
 };
 
+type Options = {
+  radiusCity?: number,
+  radiusHome?: number,
+  tripMinimum?: number,
+};
+
 export type Checkin = {
   created: number,
   id: string,
@@ -75,6 +81,7 @@ export type TripCollection = {
   qualifyingCheckins: number,
   totalTrips: number,
   home: Location,
+  range: string,
   startDate: Date,
   endDate: Date,
   start: string,
@@ -182,9 +189,9 @@ function buildTrip(checkins: Array<Checkin>): Trip {
   const start = startDate.format('MMMM D, YYYY');
   const end = endDate.format('MMMM D, YYYY');
   const rangeStart = startDate.format('MM/DD');
-  const range = startDate.isSame(endDate)
-    ? rangeStart
-    : rangeStart + ' to ' + endDate.format('MM/DD');
+  const rangeEnd = endDate.format('MM/DD');
+  const range =
+    rangeStart === rangeEnd ? rangeStart : rangeStart + ' to ' + rangeEnd;
   const cities = _.countUp(_.pluck(checkins, 'city'), true);
   const states = _.countUp(_.pluck(checkins, 'state'), true);
   const city = cities[0] ? cities[0].value : '';
@@ -209,22 +216,19 @@ const Backstroke = function(config: Configuration) {
   const Foursquare = nodeFoursquare(foursquare);
   const logger = require('winston');
 
-  const {
-    concurrentCalls,
-    distanceUnit,
-    limit,
-    passLimit,
-    radiusCity,
-    radiusHome,
-    tripMinimum,
-  } = backstrokes;
+  const { concurrentCalls, distanceUnit, limit, passLimit } = backstrokes;
 
   function buildTripsByLocation(
     checkins: Array<Checkin>,
     home: Location,
     before: Date,
     after: Date,
+    options: Options = {},
   ): TripCollection {
+    const radiusHome = options.radiusHome || backstrokes.radiusHome;
+    const radiusCity = options.radiusCity || backstrokes.radiusCity;
+    const tripMinimum = options.tripMinimum || backstrokes.tripMinimum;
+
     const results = [];
     let trip = [];
     let qualifyingCheckins = 0;
@@ -275,25 +279,28 @@ const Backstroke = function(config: Configuration) {
       // Get the first location of the first checkin in the trip.
       var firstLocation = _.first(trip).location;
 
-      // If the distance between the first location and this checkin's location is within the boundary...
+      // If the distance between the first location and this checkin's location
+      // is within the boundary...
       if (
         LatLng.getDistance(firstLocation, checkinLocation)[distanceUnit] <=
         radiusCity
       ) {
         // ...add to the trip.
         trip.push(checkin);
-      } else {
-        // ... otherwise, process and add the trip. If the trip length is within the minimum...
-        if (trip.length >= tripMinimum) {
-          // ...increment the qualifying checkins count.
-          qualifyingCheckins += trip.length;
-          results.push(buildTrip(trip));
-        }
-        trip = [checkin];
+        return;
       }
+
+      // ... otherwise, process and add the trip. If the trip length is within
+      // the minimum...
+      if (trip.length >= tripMinimum) {
+        // ...increment the qualifying checkins count.
+        results.push(buildTrip(trip));
+      }
+      trip = [checkin];
     });
 
     if (trip.length >= tripMinimum) {
+      qualifyingCheckins += trip.length;
       results.push(buildTrip(trip));
     }
 
@@ -307,11 +314,17 @@ const Backstroke = function(config: Configuration) {
         ' checkins.',
     );
 
+    const rangeStart = moment(after).format('MM/YYYY');
+    const rangeEnd = moment(before).format('MM/YYYY');
+    const range =
+      rangeStart === rangeEnd ? rangeStart : rangeStart + ' to ' + rangeEnd;
+
     return {
       totalCheckins: checkins.length,
       qualifyingCheckins,
       totalTrips: results.length,
       home,
+      range,
       startDate: after,
       endDate: before,
       start: moment(after).format('MMMM D, YYYY'),
@@ -397,6 +410,10 @@ const Backstroke = function(config: Configuration) {
       allResults = allResults.concat(batch);
     }
 
+    if (passLimit === passTotal && keepFetching) {
+      logger.warn('Results were truncated after ' + passTotal + ' passes');
+    }
+
     logger.info(
       'RETRIEVED: ' +
         allResults.length +
@@ -415,6 +432,7 @@ const Backstroke = function(config: Configuration) {
     postalCode: string,
     before: Date,
     after: Date,
+    options: Options = {},
     accessToken: string,
   ): Promise<?TripCollection> {
     logger.debug('ENTERING: getTrips');
@@ -442,7 +460,7 @@ const Backstroke = function(config: Configuration) {
       return null;
     }
 
-    return buildTripsByLocation(checkins, location, before, after);
+    return buildTripsByLocation(checkins, location, before, after, options);
   }
 
   return {
