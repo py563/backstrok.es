@@ -8,6 +8,7 @@ import cx from 'classnames';
 import moment from 'moment';
 
 import { Link } from 'react-router-dom';
+import type { Node } from 'react';
 import styles from './../../css/trips/TripFormFields.module.css';
 
 type Option = {
@@ -28,14 +29,14 @@ type DefaultProps = {
 
 export type Props = DefaultProps;
 
-function getOptions(options: ?Array<Option>) {
-  return options
-    ? options.map(option => (
-        <option key={option.text} value={option.value}>
-          {option.text}
-        </option>
-      ))
-    : null;
+function getOptions(options: Array<Option> = []): Array<Node> {
+  const stuff = options.map(item => (
+    <option key={item.text} value={item.value}>
+      {item.text}
+    </option>
+  ));
+
+  return stuff;
 }
 
 const currentMonth = moment().month() + 1;
@@ -79,7 +80,7 @@ export default class TripFormFields extends React.PureComponent<
 
     const years = getOptions(
       [...Array(currentYear - startedYear + 1)].map((_, i) => {
-        const year = currentYear - i;
+        const year = currentYear - i + '';
         return {
           text: year,
           value: year,

@@ -6,7 +6,7 @@ import React from 'react';
 
 import styles from './../../css/home/Header.module.css';
 
-class Header extends React.Component {
+class Header extends React.Component<any> {
   render() {
     return (
       <header className={styles.header}>

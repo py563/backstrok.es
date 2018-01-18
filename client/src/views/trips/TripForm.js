@@ -2,7 +2,7 @@
  * @providesModule TripForm
  * @flow
  */
-import type { FormFields } from './TripFormFields';
+import type { Props as FormFields } from './TripFormFields';
 import { Route, Link } from 'react-router-dom';
 
 import React from 'react';

@@ -1,9 +1,2 @@
-.nodester.appconfig
-.idea
-.monitor
+build
 node_modules
-.db
-.svn
-assets/xcode
-.DS_Store
-dist/config.js
