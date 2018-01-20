@@ -79,8 +79,9 @@ function addRoutes(app: $Application, config: Configuration) {
     logger.debug(`BEFORE: ${request.url}`);
     logger.debug('Entering: /restrict');
     let { session } = request;
+    console.log(session);
     let { foursquare } = session;
-    const accessToken = process.env.ACCESS_TOKEN;
+    const accessToken = null; // process.env.ACCESS_TOKEN;
 
     // If we have an access token in config, we're likely testing something, so
     // call for the current user.
@@ -166,8 +167,12 @@ function addRoutes(app: $Application, config: Configuration) {
                       user: user.user,
                       accessToken,
                     };
+
                     delete request.query.code;
                     delete request.query.c;
+
+                    console.log(request.session);
+
                     response.send(sendWindowedResponse({ auth: true }));
                   }
                 },

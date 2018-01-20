@@ -43,7 +43,7 @@ const currentMonth = moment().month() + 1;
 const currentYear = moment().year();
 const months = getOptions(
   moment.months().map((_, value) => {
-    const display = value + 1;
+    const display = value + 1 + '';
     return {
       text: display,
       value: display,

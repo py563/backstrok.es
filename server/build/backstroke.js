@@ -104,7 +104,7 @@ function convertFSQCheckin(checkin) {
   var d = _moment2.default.unix(createdAt).utcOffset(timeZoneOffset);
 
   return {
-    created: d,
+    created: d.toDate(),
     id: id,
     createdDate: (0, _moment2.default)(d).format('ddd, MMM Do, YYYY'),
     createdTime: (0, _moment2.default)(d).format('h:mma'),

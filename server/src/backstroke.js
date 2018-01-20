@@ -161,7 +161,7 @@ function convertFSQCheckin(checkin: FSQCheckin): Checkin {
   const d = moment.unix(createdAt).utcOffset(timeZoneOffset);
 
   return {
-    created: d,
+    created: d.toDate(),
     id,
     createdDate: moment(d).format('ddd, MMM Do, YYYY'),
     createdTime: moment(d).format('h:mma'),

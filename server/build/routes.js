@@ -81,41 +81,43 @@ function addRoutes(app, config) {
               logger.debug('BEFORE: ' + request.url);
               logger.debug('Entering: /restrict');
               session = request.session;
+
+              console.log(session);
               _session = session, foursquare = _session.foursquare;
-              accessToken = process.env.ACCESS_TOKEN;
+              accessToken = null; // process.env.ACCESS_TOKEN;
 
               // If we have an access token in config, we're likely testing something, so
               // call for the current user.
 
               if (!((!foursquare || !foursquare.accessToken) && accessToken)) {
-                _context2.next = 11;
+                _context2.next = 12;
                 break;
               }
 
-              _context2.next = 8;
+              _context2.next = 9;
               return genUser(accessToken);
 
-            case 8:
+            case 9:
               _user = _context2.sent;
 
               request.session.foursquare = { accessToken: accessToken, user: _user };
               session = request.session;
 
-            case 11:
+            case 12:
               if (!session.foursquare) {
-                _context2.next = 14;
+                _context2.next = 15;
                 break;
               }
 
               next();
               return _context2.abrupt('return');
 
-            case 14:
+            case 15:
 
               response.status(401);
               response.send('Not Authorized');
 
-            case 16:
+            case 17:
             case 'end':
               return _context2.stop();
           }
@@ -169,8 +171,12 @@ function addRoutes(app, config) {
               user: user.user,
               accessToken: accessToken
             };
+
             delete request.query.code;
             delete request.query.c;
+
+            console.log(request.session);
+
             response.send(sendWindowedResponse({ auth: true }));
           }
         });
