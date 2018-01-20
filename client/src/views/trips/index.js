@@ -72,7 +72,6 @@ export default class Trips extends React.Component<Props, State> {
 
   render() {
     const { data, form } = this.props;
-    console.log(data);
     const { trips, home, start, end } = data;
 
     let bodyClass = styles.trips;
