@@ -3,6 +3,7 @@ import express from 'express';
 import winston from 'winston';
 import foursquare from 'node-foursquare';
 import moment from 'moment';
+import asyncHandler from 'express-async-handler';
 
 import type {
   $Application,
@@ -15,22 +16,14 @@ import type {
 import backstroke from './backstroke';
 
 import type { Configuration } from './config';
+import type { FoursquareEntity } from 'FoursquareAPI';
 
 type SessionEnabledRequest = $Request & {
   session: {
     destroy: Function,
     foursquare?: {
       accessToken: string,
-      user?: {
-        id: string,
-        firstName: string,
-        lastName: string,
-        photo: {
-          prefix: string,
-          suffix: string,
-        },
-        type: 'user' | 'venue',
-      },
+      entity?: FoursquareEntity,
     },
   },
 };
@@ -64,7 +57,6 @@ function addRoutes(app: $Application, config: Configuration) {
         if (error) {
           reject(error);
         } else {
-          console.log(results);
           resolve(results.user);
         }
       }),
@@ -79,7 +71,6 @@ function addRoutes(app: $Application, config: Configuration) {
     logger.debug(`BEFORE: ${request.url}`);
     logger.debug('Entering: /restrict');
     let { session } = request;
-    console.log(session);
     let { foursquare } = session;
     const accessToken = null; // process.env.ACCESS_TOKEN;
 
@@ -97,6 +88,7 @@ function addRoutes(app: $Application, config: Configuration) {
     }
 
     response.status(401);
+    console.log(1);
     response.send('Not Authorized');
   }
 
@@ -192,7 +184,7 @@ function addRoutes(app: $Application, config: Configuration) {
     .route('/who')
     .get(
       restrict,
-      (
+      async (
         request: SessionEnabledRequest,
         response: $Response,
         _next: NextFunction,
@@ -200,10 +192,10 @@ function addRoutes(app: $Application, config: Configuration) {
         logger.debug('REQUESTING: /api/who');
         const { session } = request;
         const { foursquare } = session;
-        const { user } = foursquare || {};
+        const { entity } = foursquare || {};
 
         response.json({
-          foursquare: user,
+          foursquare: entity,
         });
       },
     );
@@ -306,6 +298,20 @@ function addRoutes(app: $Application, config: Configuration) {
     );
 
   app.use('/api', router);
+
+  app.use(
+    asyncHandler(
+      async (request: $Request, response: $Response, next: NextFunction) => {
+        console.log(request.route);
+        if (!request.route) {
+          console.log(2);
+          response.status(404);
+          response.send('Not Found');
+        }
+        next();
+      },
+    ),
+  );
 }
 
 export { addRoutes };

@@ -3,12 +3,12 @@ import { Route, Switch } from 'react-router-dom';
 
 import './../css/core.css';
 import Home from './home';
-import Trips from './trips';
+import TripsContainer from './flux/containers/TripsContainer';
 
 const App = () => (
   <Switch>
     <Route exact path="/" component={Home} />
-    <Route path="/trips" component={Trips} />
+    <Route path="/trips" component={TripsContainer} />
   </Switch>
 );
 

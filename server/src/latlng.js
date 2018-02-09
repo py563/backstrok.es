@@ -10,6 +10,17 @@ export type Location = {
   lng: number,
 };
 
+type CartesianCoords = {
+  x: number,
+  y: number,
+  z: number,
+};
+
+type RadianCoords = {
+  x: number,
+  y: number,
+};
+
 export type Distance = {
   start: Location,
   end: Location,
@@ -21,7 +32,29 @@ const postalCodeCache = {};
 
 /* Converts numeric degrees to radians */
 function toRad(number: number): number {
-  return number * Math.PI / 180;
+  return number * (Math.PI / 180);
+}
+
+function locationsToCart(coords: Array<Location> = []): Array<CartesianCoords> {
+  return radToCart(
+    coords.map(coord => {
+      return {
+        x: toRad(coord.lat),
+        y: toRad(coord.lng),
+      };
+    }),
+  );
+}
+
+function radToCart(coords: Array<RadianCoords> = []): Array<CartesianCoords> {
+  return coords.map((coord: RadianCoords) => {
+    const { x, y } = coord;
+    return {
+      x: Math.cos(x) * Math.cos(y),
+      y: Math.cos(x) * Math.sin(y),
+      z: Math.sin(x),
+    };
+  });
 }
 
 var LatLng = function(config: GeocodeConfiguration) {
@@ -116,9 +149,25 @@ var LatLng = function(config: GeocodeConfiguration) {
     };
   }
 
+  function getMidpoint(locations: Array<Location> = []): Location {
+    // Props to gboone: https://gist.github.com/gboone/3cfa9a7df228854ec3a9
+    const allCarts = locationsToCart(locations);
+    const f = (p: number, c: number, _, a: Array<number>) => (p + c) / a.length;
+    const meanX = allCarts.map(cart => cart.x).reduce(f);
+    const meanY = allCarts.map(cart => cart.y).reduce(f);
+    const meanZ = allCarts.map(cart => cart.z).reduce(f);
+    const hyp = Math.sqrt(meanX * meanX + meanY * meanY);
+
+    const lat = toRad(Math.atan2(meanZ, hyp));
+    const lng = toRad(Math.atan2(meanY, meanX));
+
+    return { lat, lng };
+  }
+
   return {
     getDistance,
     genLocationByPostalCode,
+    getMidpoint,
   };
 };
 
