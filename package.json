@@ -1,6 +1,7 @@
 {
   "name": "backstrok.es",
-  "description": "A Web Application, written in Node.js, containing a collection of social media questions I've had that I want to answer.",
+  "description":
+    "A Web Application, written in Node.js, containing a collection of social media questions I've had that I want to answer.",
   "version": "0.0.2",
   "author": "Clint Andrew Hall <clint@clintandrewhall.com>",
   "repository": {
@@ -9,8 +10,8 @@
   },
   "bin": "./server.js",
   "scripts": {
-    "start": "npm run browserify && node server.js",
-    "browserify": "browserify -t [reactify --es6] public/scripts/index.js -o public/scripts/bundle.js"
+    "start":
+      "browserify -t [reactify --es6] public/scripts/index.js -o public/scripts/bundle.js && node server.js"
   },
   "dependencies": {
     "async": "^1.0.0",
