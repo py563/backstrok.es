@@ -5,3 +5,5 @@ node_modules
 .db
 .svn
 assets/xcode
+.env
+bundle.js
