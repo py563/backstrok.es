@@ -1,5 +1,9 @@
 /* @flow */
 import dotenv from 'dotenv';
+dotenv.config();
+
+const env = ((process.env: any): { [string]: string });
+const { FSQ_CLIENT_ID, FSQ_CLIENT_SECRET, FSQ_REDIRECT } = env;
 
 export type BackstrokesConfiguration = {
   concurrentCalls: number,
@@ -17,25 +21,11 @@ export type GeocodeConfiguration = {
 
 export type Configuration = {
   backstrokes: BackstrokesConfiguration,
-  foursquare: {
+  nodeFoursquare: {
     secrets: {
       clientId: string,
       clientSecret: string,
       redirectUrl: string,
-    },
-    foursquare: {
-      mode: 'foursquare' | 'swarm',
-      version: string,
-    },
-    startYear: number,
-    winston: {
-      loggers: {
-        default: {
-          console: {
-            level: string,
-          },
-        },
-      },
     },
   },
   geocode: GeocodeConfiguration,
@@ -49,8 +39,6 @@ export type Configuration = {
   },
 };
 
-dotenv.config();
-
 const config: Configuration = {
   backstrokes: {
     concurrentCalls: parseInt(process.env.LIMIT_CALLS, 10) || 3,
@@ -61,25 +49,11 @@ const config: Configuration = {
     radiusCity: 20,
     tripMinimum: 2,
   },
-  foursquare: {
-    foursquare: {
-      mode: 'swarm',
-      version: '20180118',
-    },
+  nodeFoursquare: {
     secrets: {
-      clientId: process.env.FSQ_CLIENT_ID || '',
-      clientSecret: process.env.FSQ_CLIENT_SECRET || '',
-      redirectUrl: process.env.FSQ_REDIRECT || '',
-    },
-    startYear: 2009,
-    winston: {
-      loggers: {
-        default: {
-          console: {
-            level: 'enter',
-          },
-        },
-      },
+      clientId: FSQ_CLIENT_ID,
+      clientSecret: FSQ_CLIENT_SECRET,
+      redirectUrl: FSQ_REDIRECT,
     },
   },
   geocode: {

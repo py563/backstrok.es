@@ -210,10 +210,9 @@ function buildTrip(checkins: Array<Checkin>): Trip {
   };
 }
 
-const Backstroke = function(config: Configuration) {
-  const { backstrokes, geocode, foursquare } = config;
+const Backstroke = function(config: Configuration, Foursquare: any) {
+  const { backstrokes, geocode } = config;
   const LatLng = latlng(geocode);
-  const Foursquare = nodeFoursquare(foursquare);
   const logger = require('winston');
 
   const { concurrentCalls, distanceUnit, limit, passLimit } = backstrokes;
@@ -223,7 +222,7 @@ const Backstroke = function(config: Configuration) {
     home: Location,
     before: Date,
     after: Date,
-    options: Options = {},
+    options: Options = {}
   ): TripCollection {
     const radiusHome = options.radiusHome || backstrokes.radiusHome;
     const radiusCity = options.radiusCity || backstrokes.radiusCity;
@@ -263,7 +262,7 @@ const Backstroke = function(config: Configuration) {
           if (
             LatLng.getDistance(
               _.last(_.last(results).checkins).location,
-              checkinLocation,
+              checkinLocation
             )[distanceUnit] <= radiusCity
           ) {
             // ... if it fits, add it to that trip and return...
@@ -311,7 +310,7 @@ const Backstroke = function(config: Configuration) {
         qualifyingCheckins +
         ' of ' +
         checkins.length +
-        ' checkins.',
+        ' checkins.'
     );
 
     const rangeStart = moment(after).format('MM/YYYY');
@@ -337,13 +336,12 @@ const Backstroke = function(config: Configuration) {
     offset: number,
     before: Date,
     after: Date,
-    accessToken: string,
+    accessToken: string
   ): Promise<?Array<FSQCheckin>> {
     logger.debug('ENTERING: retrieveCheckinSet, offset=' + offset);
 
     return new Promise((resolve, reject) =>
-      Foursquare.Users.getCheckins(
-        'self',
+      Foursquare.Users.getSelfCheckins(
         {
           limit,
           beforeTimestamp: getEpoch(before),
@@ -357,15 +355,15 @@ const Backstroke = function(config: Configuration) {
           } else {
             resolve(results.checkins ? results.checkins.items || [] : []);
           }
-        },
-      ),
+        }
+      )
     );
   }
 
   async function genCheckins(
     before: Date,
     after: Date,
-    accessToken: string,
+    accessToken: string
   ): Promise<?Array<Checkin>> {
     logger.debug('ENTERING: retrieveCheckins');
     let allResults = [];
@@ -380,7 +378,7 @@ const Backstroke = function(config: Configuration) {
           i * limit + baseOffset,
           before,
           after,
-          accessToken,
+          accessToken
         );
 
         return awaitable;
@@ -396,7 +394,7 @@ const Backstroke = function(config: Configuration) {
       const results = filteredResults.reduce(
         (a: Array<FSQCheckin>, b: Array<FSQCheckin>): Array<FSQCheckin> =>
           a.concat(b),
-        [],
+        []
       );
 
       passTotal += 1;
@@ -421,7 +419,7 @@ const Backstroke = function(config: Configuration) {
         passTotal +
         ' pass(es) of ' +
         concurrentCalls +
-        ' calls each.',
+        ' calls each.'
     );
 
     allResults.sort(checkinComparator);
@@ -433,7 +431,7 @@ const Backstroke = function(config: Configuration) {
     before: Date,
     after: Date,
     options: Options = {},
-    accessToken: string,
+    accessToken: string
   ): Promise<?TripCollection> {
     logger.debug('ENTERING: getTrips');
 
@@ -443,7 +441,7 @@ const Backstroke = function(config: Configuration) {
           postalCode +
           ') or no accessToken (' +
           accessToken +
-          ')',
+          ')'
       );
     }
 

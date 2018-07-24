@@ -1,7 +1,8 @@
 /* @flow */
+
 import util from 'util';
 import logger from 'winston';
-import maps from '@google/maps';
+import fetch from 'node-fetch';
 
 import type { GeocodeConfiguration } from './config';
 
@@ -59,11 +60,6 @@ function radToCart(coords: Array<RadianCoords> = []): Array<CartesianCoords> {
 
 var LatLng = function(config: GeocodeConfiguration) {
   const { appId } = config;
-
-  const Maps = maps.createClient({
-    key: appId,
-    Promise: Promise,
-  });
 
   async function genLocationByPostalCode(
     postalCode: string,

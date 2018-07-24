@@ -1,7 +1,7 @@
 /* @flow */
 import express from 'express';
 import winston from 'winston';
-import foursquare from 'node-foursquare';
+import nodeFoursquare from 'node-foursquare';
 import moment from 'moment';
 import asyncHandler from 'express-async-handler';
 
@@ -16,7 +16,7 @@ import type {
 import backstroke from './backstroke';
 
 import type { Configuration } from './config';
-import type { FoursquareEntity } from 'FoursquareAPI';
+import type { FoursquareEntity } from 'node-foursquare';
 
 type SessionEnabledRequest = $Request & {
   session: {
@@ -28,9 +28,17 @@ type SessionEnabledRequest = $Request & {
   },
 };
 
-const logger = new winston.Logger({
-  transports: [new winston.transports.Console({ level: 'debug' })],
+const logger = winston.createLogger({
+  level: 'debug',
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.simple(),
+    })
+  );
+}
 
 function sendWindowedResponse(json: Object): string {
   return `
@@ -45,34 +53,34 @@ function sendWindowedResponse(json: Object): string {
 
 function addRoutes(app: $Application, config: Configuration) {
   const router: Router = express.Router();
-  const Backstroke = backstroke(config);
-  const Foursquare = foursquare(config.foursquare);
+  const Foursquare = nodeFoursquare(config.nodeFoursquare);
+  const Backstroke = backstroke(config, Foursquare);
 
   async function genUser(accessToken: string) {
     return new Promise((resolve, reject) =>
-      Foursquare.Users.getUser('self', accessToken, function success(
+      Foursquare.Users.getSelfDetails(accessToken, function success(
         error,
-        results,
+        results
       ) {
         if (error) {
           reject(error);
         } else {
           resolve(results.user);
         }
-      }),
+      })
     );
   }
 
   async function restrict(
     request: SessionEnabledRequest,
     response: $Response,
-    next: NextFunction,
+    next: NextFunction
   ) {
     logger.debug(`BEFORE: ${request.url}`);
     logger.debug('Entering: /restrict');
     let { session } = request;
     let { foursquare } = session;
-    const accessToken = null; // process.env.ACCESS_TOKEN;
+    const accessToken = process.env.ACCESS_TOKEN;
 
     // If we have an access token in config, we're likely testing something, so
     // call for the current user.
@@ -98,13 +106,13 @@ function addRoutes(app: $Application, config: Configuration) {
       (
         request: SessionEnabledRequest,
         response: $Response,
-        _: NextFunction,
+        _: NextFunction
       ) => {
         logger.debug('REQUESTING: /api/login');
         const location = Foursquare.getAuthClientRedirectUrl();
-        response.writeHead(303, { location });
+        response.redirect(location);
         response.end();
-      },
+      }
     );
 
   router
@@ -118,7 +126,7 @@ function addRoutes(app: $Application, config: Configuration) {
           },
         },
         response: $Response,
-        _: NextFunction,
+        _: NextFunction
       ) => {
         logger.debug('REQUESTING: /callback/foursquare');
         const { query } = request;
@@ -131,20 +139,19 @@ function addRoutes(app: $Application, config: Configuration) {
           (accessTokenError: Error, accessToken: string) => {
             if (accessTokenError) {
               logger.error(
-                `Error retrieving Access Token: ${accessTokenError.message}`,
+                `Error retrieving Access Token: ${accessTokenError.message}`
               );
               response.send(
                 sendWindowedResponse({
                   auth: false,
                   reason: accessTokenError.message,
-                }),
+                })
               );
               return;
             }
 
             if (accessToken) {
-              Foursquare.Users.getUser(
-                'self',
+              Foursquare.Users.getSelfDetails(
                 accessToken,
                 (getUserError: Error, user: Object) => {
                   if (getUserError) {
@@ -152,7 +159,7 @@ function addRoutes(app: $Application, config: Configuration) {
                       sendWindowedResponse({
                         auth: false,
                         reason: getUserError.message,
-                      }),
+                      })
                     );
                   } else {
                     request.session.foursquare = {
@@ -167,17 +174,17 @@ function addRoutes(app: $Application, config: Configuration) {
 
                     response.send(sendWindowedResponse({ auth: true }));
                   }
-                },
+                }
               );
             } else {
               logger.error('No Access Token was received.');
               response.send(
-                sendWindowedResponse({ auth: false, reason: 'no_token' }),
+                sendWindowedResponse({ auth: false, reason: 'no_token' })
               );
             }
-          },
+          }
         );
-      },
+      }
     );
 
   router
@@ -187,17 +194,17 @@ function addRoutes(app: $Application, config: Configuration) {
       async (
         request: SessionEnabledRequest,
         response: $Response,
-        _next: NextFunction,
+        _next: NextFunction
       ) => {
         logger.debug('REQUESTING: /api/who');
         const { session } = request;
         const { foursquare } = session;
-        const { entity } = foursquare || {};
+        const { user } = foursquare || {};
 
         response.json({
-          foursquare: entity,
+          foursquare: user,
         });
-      },
+      }
     );
 
   router
@@ -206,12 +213,35 @@ function addRoutes(app: $Application, config: Configuration) {
       (
         request: SessionEnabledRequest,
         response: $Response,
-        _: NextFunction,
+        _: NextFunction
       ) => {
         request.session.destroy(() => {
           response.redirect('/');
         });
-      },
+      }
+    );
+
+  router
+    .route('/checkins')
+    .get(
+      restrict,
+      async (
+        request: SessionEnabledRequest & {},
+        response: $Response,
+        _: NextFunction
+      ) => {
+        logger.debug('REQUESTING: /trips/:postalCode');
+        const { session, params, query } = request;
+        const { foursquare } = session;
+        const { accessToken } = foursquare || {};
+
+        const checkinSet = await Backstroke.genCheckins(
+          new Date(1532200086 * 1000),
+          new Date(1500595200 * 1000),
+          accessToken
+        );
+        response.json(checkinSet);
+      }
     );
 
   router
@@ -234,7 +264,7 @@ function addRoutes(app: $Application, config: Configuration) {
           },
         },
         response: $Response,
-        _: NextFunction,
+        _: NextFunction
       ) => {
         logger.debug('REQUESTING: /trips/:postalCode');
         const { session, params, query } = request;
@@ -290,11 +320,11 @@ function addRoutes(app: $Application, config: Configuration) {
           endDate.toDate(),
           startDate.toDate(),
           options,
-          accessToken,
+          accessToken
         );
 
         response.json(tripCollection);
-      },
+      }
     );
 
   app.use('/api', router);
@@ -309,8 +339,8 @@ function addRoutes(app: $Application, config: Configuration) {
           response.send('Not Found');
         }
         next();
-      },
-    ),
+      }
+    )
   );
 }
 

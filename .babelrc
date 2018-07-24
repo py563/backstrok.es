@@ -1,0 +1,16 @@
+{
+  comments: false,
+  plugins: ['transform-object-rest-spread'],
+  presets: [
+    [
+      'env',
+      {
+        targets: {
+          node: '4',
+        },
+      },
+    ],
+    'flow',
+    'stage-0',
+  ],
+}

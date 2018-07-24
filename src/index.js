@@ -1,9 +1,13 @@
 /* @flow */
+import dotenv from 'dotenv';
+dotenv.config();
+
 import 'babel-core/register';
 import 'babel-polyfill';
 import express from 'express';
 import 'express-async-errors';
 import winston from 'winston';
+import expressSession from 'express-session';
 
 import config from './config';
 import { addRoutes } from './routes';
@@ -14,18 +18,23 @@ const { port, session } = server;
 const { maxAge, secret } = session;
 
 app.use(
-  require('express-session')({
+  expressSession({
     maxAge,
     resave: true,
     saveUninitialized: true,
     secret,
-  }),
+  })
 );
+
+const logger = winston.createLogger({
+  level: 'info',
+  transports: [new winston.transports.Console()],
+});
 
 app.use(express.static(`${__dirname}/public`));
 addRoutes(app, config);
 app.listen(port);
-winston.info('Server started on port ' + port);
+logger.info('Server started on port ' + port);
 
 // import latlng from './latlng';
 // const { geocode } = config;

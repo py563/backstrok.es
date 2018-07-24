@@ -3,6 +3,7 @@
 [include]
 
 [libs]
+./node-modules/node-foursquare/dist
 
 [lints]
 
