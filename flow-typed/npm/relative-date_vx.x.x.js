@@ -14,33 +14,8 @@
  */
 
 declare module 'relative-date' {
-  declare module.exports: any;
-}
-
-/**
- * We include stubs for each file inside this npm package in case you need to
- * require those files directly. Feel free to delete any files that aren't
- * needed.
- */
-declare module 'relative-date/lib/relative-date' {
-  declare module.exports: any;
-}
-
-declare module 'relative-date/test/node' {
-  declare module.exports: any;
-}
-
-declare module 'relative-date/test/test' {
-  declare module.exports: any;
-}
-
-// Filename aliases
-declare module 'relative-date/lib/relative-date.js' {
-  declare module.exports: $Exports<'relative-date/lib/relative-date'>;
-}
-declare module 'relative-date/test/node.js' {
-  declare module.exports: $Exports<'relative-date/test/node'>;
-}
-declare module 'relative-date/test/test.js' {
-  declare module.exports: $Exports<'relative-date/test/test'>;
+  declare module.exports: (
+    input: Date | number,
+    reference?: Date | number
+  ) => string;
 }

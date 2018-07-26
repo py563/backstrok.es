@@ -28,6 +28,8 @@ var _config2 = _interopRequireDefault(_config);
 
 var _routes = require('./routes');
 
+var _routes2 = _interopRequireDefault(_routes);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 _dotenv2.default.config();
@@ -53,6 +55,8 @@ var logger = _winston2.default.createLogger({
 });
 
 app.use(_express2.default.static(`${__dirname}/public`));
-(0, _routes.addRoutes)(app, _config2.default);
+
+(0, _routes2.default)(app, _config2.default);
+
 app.listen(port);
 logger.info('Server started on port ' + port);

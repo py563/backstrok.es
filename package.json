@@ -9,12 +9,16 @@
   },
   "license": "MIT",
   "scripts": {
+    "client:build": "yarn --cwd client react-scripts build",
+    "client:start": "yarn --cwd client react-scripts start",
+    "client:test": "yarn --cwd react-scripts test --env=jsdom",
     "eslint": "eslint",
     "flow": "flow",
-    "build": "babel src/ -d dist/",
-    "start": "concurrently \"node start-client\" \"node start-server\"",
-    "server": "yarn build && node dist/",
-    "ds": "nodemon --watch src --exec 'yarn run server'"
+    "server:build": "babel src/ -d dist/",
+    "server:develop": "nodemon --watch src --exec 'babel-node ./src'",
+    "server:start": "yarn server:build && node dist/",
+    "start": "concurrently \"yarn server:start\" \"yarn client:start\"",
+    "develop": "concurrently \"yarn server:develop\" \"yarn client:start\""
   },
   "dependencies": {
     "concurrently": "^3.6.0",
@@ -24,7 +28,7 @@
     "express-async-handler": "^1.1.3",
     "express-session": "^1.15.6",
     "moment": "^2.22.2",
-    "node-foursquare": "^0.4.2",
+    "node-foursquare": "^0.4.3",
     "relative-date": "^1.1.3",
     "request": "^2.87.0",
     "underscore": "^1.9.1",

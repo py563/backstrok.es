@@ -1781,6 +1781,10 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
+geocluster@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/geocluster/-/geocluster-0.1.1.tgz#37cf92121a0e57e4726015faf28cba5ba335d5c1"
+
 getpass@^0.1.1:
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/getpass/-/getpass-0.1.7.tgz#5eff8e3e684d569ae4cb2b1282604e8ba62149fa"
@@ -2417,9 +2421,9 @@ node-fetch@^2.1.2:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.1.2.tgz#ab884e8e7e57e38a944753cec706f788d1768bb5"
 
-node-foursquare@^0.4.2:
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/node-foursquare/-/node-foursquare-0.4.2.tgz#a8e9cad3941eb1e3bf39612beb057867b7dbd430"
+node-foursquare@^0.4.3:
+  version "0.4.3"
+  resolved "https://registry.yarnpkg.com/node-foursquare/-/node-foursquare-0.4.3.tgz#eacd1f41547286a41041a166cac71f2f6840cdd0"
   dependencies:
     deepmerge "^2.1.1"
     flowgen "^1.2.2"
