@@ -6,7 +6,11 @@ import nodeFoursquare from 'node-foursquare';
 import winston from 'winston';
 
 import Checkins from './checkins';
-import { getClusters } from './geocluster';
+import {
+  getClusters,
+  getMilesThreshold,
+  getKilometerThreshold,
+} from './geocluster';
 
 import type { Configuration } from './config';
 import type { BackstrokesCheckin, FoursquareCheckin } from './checkins';
@@ -41,6 +45,30 @@ function getEpoch(date: Date): number {
   return Math.round(date.getTime() / 1000);
 }
 
+const countUp = (
+  array: Array<{ [key: string]: any }>,
+  truthy: boolean
+): Array<{ [key: string]: any }> => {
+  const counts: { [value: any]: { value: any, count: number } } = {};
+
+  _.each(array, item => {
+    if (truthy && !item) {
+      return;
+    }
+
+    if (!counts[item]) {
+      counts[item] = {
+        value: item,
+        count: 1,
+      };
+    } else {
+      counts[item].count++;
+    }
+  });
+
+  return _.toArray(_.sortBy(_.toArray(counts), item => -item.count));
+};
+
 const Backstroke = function(config: Configuration) {
   const { backstrokes } = config;
   const logger = winston.createLogger({
@@ -72,10 +100,17 @@ const Backstroke = function(config: Configuration) {
   async function genClusters(
     before: Date,
     after: Date,
+    options: ?{
+      radius?: number,
+    } = {},
     accessToken: string
   ): Promise<Array<BackstrokesCheckin>> {
     const checkins = await genCheckins(before, after, accessToken);
-    return getClusters(checkins);
+    const threshold =
+      config.distanceUnit === 'km'
+        ? getKilometerThreshold(options.radius)
+        : getMilesThreshold(options.radius);
+    return getClusters(checkins, null, threshold);
   }
 
   async function genCheckins(
@@ -140,37 +175,15 @@ const Backstroke = function(config: Configuration) {
     return allCheckins.map(checkin => Checkins.toBackstrokesCheckin(checkin));
   }
 
-  const countUp = (array, truthy) => {
-    const counts = {};
-
-    _.each(array, function(item) {
-      if (truthy && !item) {
-        return;
-      }
-
-      if (!counts[item]) {
-        counts[item] = {
-          value: item,
-          count: 1,
-        };
-      } else {
-        counts[item].count++;
-      }
-    });
-
-    const results = _.sortBy(_.toArray(counts), function(item) {
-      return -item.count;
-    });
-
-    return _.toArray(results);
-  };
-
   async function genTrips(
     before: Date,
     after: Date,
+    options: ?{
+      radius?: number,
+    } = {},
     accessToken: string
   ): Promise<Array<Trip>> {
-    const clusters = await genClusters(before, after, accessToken);
+    const clusters = await genClusters(before, after, options, accessToken);
     const trips = clusters.map((cluster: Cluster) => {
       const { centroid, radius, locations } = cluster;
 
@@ -208,16 +221,19 @@ const Backstroke = function(config: Configuration) {
   async function genTripCollection(
     before: Date,
     after: Date,
+    options: ?{
+      radius?: number,
+    } = {},
     accessToken: string
   ): Promise<Array<TripCollection>> {
-    const trips = await genTrips(before, after, accessToken);
+    const trips = await genTrips(before, after, options, accessToken);
     const rangeStart = moment(after).format('MM/YYYY');
     const rangeEnd = moment(before).format('MM/YYYY');
     const range =
       rangeStart === rangeEnd ? rangeStart : rangeStart + ' to ' + rangeEnd;
-    const totalCheckins = _
+    const totalCheckins: number = _
       .pluck(trips, 'count')
-      .reduce((acc, value) => (acc += value));
+      .reduce((acc: number, value: number) => (acc += value));
 
     return {
       end: moment(before).format('MMMM D, YYYY'),

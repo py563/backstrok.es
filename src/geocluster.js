@@ -60,7 +60,15 @@ const getDistance = (start: Coordinates, end: Coordinates): Distance => {
   };
 };
 
-const findCentroid = (locations: Array<Locations>): Coordinates => {
+const getKilometerThreshold = (kilometers: number): number => {
+  return kilometers / 6371;
+};
+
+const getMilesThreshold = (miles: number): number => {
+  return getKilometerThreshold(miles * 1.607);
+};
+
+const findCentroid = (locations: Array<Location>): Coordinates => {
   const length = locations.length;
   const total = locations.reduce(
     (acc: Coordinates, location: Location) => {
@@ -72,7 +80,11 @@ const findCentroid = (locations: Array<Locations>): Coordinates => {
   return { lat: total.lat / length, lng: total.lng / length };
 };
 
-const getClusters = (locations: Array<Location>, bias?: number = 1) => {
+const getClusters = (
+  locations: Array<Location>,
+  bias?: number = 1,
+  threshold?: number
+): Array<Cluster> => {
   let totalDistance = 0;
   let distances = [];
 
@@ -97,7 +109,7 @@ const getClusters = (locations: Array<Location>, bias?: number = 1) => {
 
   // derive threshold from stdev and bias
   const stdev = Math.sqrt(variance / distances.length);
-  const threshold = stdev * bias;
+  threshold = threshold || stdev * bias;
 
   let clusters: Array<Cluster> = [];
 
@@ -180,7 +192,7 @@ const getClusters = (locations: Array<Location>, bias?: number = 1) => {
   clusters.forEach((cluster: Cluster, index: number) => {
     let furthestDistance = null;
 
-    cluster.locations.forEach(location => {
+    cluster.locations.forEach((location: Location) => {
       const distance = getDistance(cluster.centroid, location.getCoordinates());
 
       if (!furthestDistance || furthestDistance.length < distance.length) {
@@ -196,6 +208,8 @@ const getClusters = (locations: Array<Location>, bias?: number = 1) => {
 };
 
 module.exports = {
-  getDistance,
   getClusters,
+  getDistance,
+  getMilesThreshold,
+  getKilometerThreshold,
 };

@@ -38,6 +38,7 @@ export default (
           query: ?{
             start: string,
             end: string,
+            radius: string,
           },
         },
         response: $Response,
@@ -58,6 +59,7 @@ export default (
         const trips = await Backstrokes.genTripCollection(
           before,
           after,
+          { radius: parseInt(query.radius || config.backstrokes.radius, 10) },
           accessToken
         );
 
@@ -94,6 +96,7 @@ export default (
         const checkins = await Backstrokes.genClusters(
           before,
           after,
+          { radius: parseInt(query.radius || config.backstrokes.radius, 10) },
           accessToken
         );
 
@@ -130,6 +133,7 @@ export default (
         const checkins = await Backstrokes.genClusters(
           before,
           after,
+          { radius: parseInt(query.radius || config.backstrokes.radius, 10) },
           accessToken
         );
 

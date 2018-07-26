@@ -10,8 +10,7 @@ export type BackstrokesConfiguration = {
   distanceUnit: 'miles' | 'km',
   limit: number,
   passLimit: number,
-  radiusHome: number,
-  radiusCity: number,
+  radius: number,
   tripMinimum: number,
 };
 
@@ -45,8 +44,7 @@ const config: Configuration = {
     distanceUnit: 'miles',
     limit: parseInt(process.env.LIMIT_RESULTS, 10) || 250,
     passLimit: parseInt(process.env.LIMIT_PASSES, 10) || 10,
-    radiusHome: 50,
-    radiusCity: 20,
+    radius: 50,
     tripMinimum: 2,
   },
   nodeFoursquare: {
