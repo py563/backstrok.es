@@ -26,24 +26,12 @@ export default () => (
       </p>
       <p className={styles.facetDesc}>
         This facet organizes Foursquare check-ins into &#34;trips&#34; of
-        sequential check-ins that took place outside a &#34;home&#34; ZIP code.
+        sequential check-ins.
       </p>
       <p className={styles.facetGo}>
         <Link className={styles.buttonLabel} to="/trips">
           Backstroke!
         </Link>
-      </p>
-    </article>
-    <article className={styles.facet}>
-      <h3 className={styles.facetHeading} id="tripstweets">
-        <span className={styles.facetLabel}>Trips n&#39; Tweets</span>
-      </h3>
-      <p className={styles.facetDesc}>
-        This facet explores where you go and and also what you say. This one is
-        currently baking.
-      </p>
-      <p className={styles.facetGoDisabled}>
-        <span className={styles.buttonLabel}>Coming Soon</span>
       </p>
     </article>
   </section>
